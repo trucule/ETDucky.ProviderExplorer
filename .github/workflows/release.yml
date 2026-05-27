@@ -1,0 +1,102 @@
+# Release workflow for ET Ducky Provider Explorer.
+#
+# Triggers when a tag of the form v* is pushed (e.g. v1.0.0, v1.2.3-beta).
+# Builds a self-contained single-file Windows x64 executable, optionally
+# signs it with an SSL.com CodeSignTool credential pulled from repository
+# secrets, and uploads the binary as a GitHub Release asset.
+#
+# Signing is optional — when the SIGN_USERNAME secret is missing the workflow
+# skips signing and publishes the unsigned binary. This is the right default
+# for forks and for the initial release before a code-signing certificate is
+# in place.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # required to create releases and upload assets
+
+jobs:
+  build:
+    name: Build, sign, and publish
+    runs-on: windows-2022
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ETDucky.ProviderExplorer.csproj
+
+      # Self-contained single-file publish bundles the .NET runtime so the
+      # binary runs on a clean Windows 10/11 host without a prior .NET
+      # install. PublishTrimmed is intentionally disabled — WinForms uses
+      # reflection that the linker can't safely prove is unused.
+      - name: Publish (self-contained single file)
+        run: |
+          dotnet publish ETDucky.ProviderExplorer.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:DebugType=none `
+            -p:DebugSymbols=false `
+            -o publish
+
+      - name: List publish output
+        run: dir publish
+
+      # Optional Authenticode signing via SSL.com CodeSignTool. The secrets
+      # are read from the repository's encrypted Secrets store; if the
+      # SIGN_USERNAME secret is absent the step is skipped and the binary
+      # ships unsigned. Forks without a cert can still use the workflow.
+      - name: Sign binary (if secrets present)
+        id: sign
+        if: ${{ env.SIGN_USERNAME != '' }}
+        env:
+          SIGN_USERNAME:      ${{ secrets.SSL_COM_USERNAME }}
+          SIGN_PASSWORD:      ${{ secrets.SSL_COM_PASSWORD }}
+          SIGN_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+          SIGN_TOTP_SECRET:   ${{ secrets.SSL_COM_TOTP_SECRET }}
+        run: |
+          # Pull CodeSignTool (released by SSL.com). Pinned to a known
+          # version so a future tool update doesn't break the workflow
+          # without notice.
+          $url  = 'https://www.ssl.com/download/codesigntool-for-windows/'
+          $tool = 'CodeSignTool'
+          Invoke-WebRequest -Uri $url -OutFile codesigntool.zip
+          Expand-Archive codesigntool.zip -DestinationPath $tool
+
+          cd $tool
+          .\CodeSignTool.bat sign `
+            -username="$env:SIGN_USERNAME" `
+            -password="$env:SIGN_PASSWORD" `
+            -credential_id="$env:SIGN_CREDENTIAL_ID" `
+            -totp_secret="$env:SIGN_TOTP_SECRET" `
+            -input_file_path="..\publish\ETDucky.ProviderExplorer.exe" `
+            -override="true"
+
+      - name: Compute SHA-256
+        run: |
+          $hash = (Get-FileHash publish\ETDucky.ProviderExplorer.exe -Algorithm SHA256).Hash
+          "ETDucky.ProviderExplorer.exe SHA-256: $hash" | Out-File publish\SHA256SUMS.txt
+          Write-Host $hash
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            publish/ETDucky.ProviderExplorer.exe
+            publish/SHA256SUMS.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <AssemblyName>ETDucky.ProviderExplorer</AssemblyName>
+    <RootNamespace>ETDucky.ProviderExplorer</RootNamespace>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+
+    <!-- Match the agent's release-build posture: strip debug symbols. -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ETW provider enumeration + session control. Same package version as
+         ETDucky.Agent so the explorer and the agent stay binary-compatible
+         (avoids two TraceEvent native shims on a host that has both). -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.3" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <!-- Note: this project does NOT reference ETDucky.Core. It is built to stand
+       alone so it can be carved out into a public MIT-licensed repo without
+       pulling in agent-internal types. The AgentConfig diff tab reads
+       AgentConfig.json as raw JSON (no Core DTO dependency). -->
+
+  <!-- Manually copy the x64 TraceEvent native DLLs after build. TraceEventSession
+       needs these for kernel-mode sessions; user-mode-only enumeration works
+       without them, but the sniffer can target kernel providers, so ship them.
+       The path uses $(PkgMicrosoft_Diagnostics_Tracing_TraceEvent) — enabled by
+       GeneratePathProperty="true" above — so this tracks the package version
+       automatically instead of hardcoding a folder that drifts on upgrade.
+       Both layout candidates are tried because TraceEvent has shipped native
+       DLLs under both build/native/amd64 and build/native/x64 across versions. -->
+  <Target Name="CopyTraceEventNativeDLLs" AfterTargets="Build">
+    <ItemGroup>
+      <TraceEventX64DLLs Include="$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\amd64\*.dll"
+                         Condition="Exists('$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\amd64')" />
+      <TraceEventX64DLLs Include="$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\x64\*.dll"
+                         Condition="Exists('$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\x64')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TraceEventX64DLLs)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="'@(TraceEventX64DLLs)' != ''" />
+  </Target>
+</Project>

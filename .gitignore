@@ -1,0 +1,35 @@
+# Build output
+bin/
+obj/
+out/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# NuGet
+*.nupkg
+packages/
+
+# JetBrains
+.idea/
+*.DotSettings.user
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Code-signing artifacts (must never be committed)
+*.pfx
+*.p12
+*.snk
+secrets.env
+
+# Local test traces
+*.etl
+*.etlx
