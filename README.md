@@ -9,7 +9,7 @@ backs PerfView and several Microsoft diagnostic tools.
 
 ## What it does
 
-Four tabs:
+Three tabs:
 
 - **Providers** — every ETW provider registered on the host, with its GUID,
   keyword count, and severity-level count. Filterable by name or GUID.
@@ -17,8 +17,6 @@ Four tabs:
   and watch events stream in. Per-event breakdown by (Event ID, Task, Opcode)
   with a details panel that explains what each value means and shows
   decoded sample payloads.
-- **Agent Diff** — load an `AgentConfig.json` and compare what the ET Ducky
-  agent is subscribing to against what's available on the host.
 - **Help** — built-in primer on ETW concepts: providers, sessions, event
   IDs, opcodes, levels, keywords, channels, kernel vs user-mode.
 
@@ -102,22 +100,6 @@ running** — that includes the ET Ducky agent's own capture engine, PerfView,
 xperf, or anyone else holding the kernel logger. Stop the conflicting
 session first.
 
-### Agent Diff tab
-
-Loads `AgentConfig.json` (default:
-`C:\ProgramData\ETDucky\Agent\AgentConfig.json`) and shows two side-by-side
-panels:
-
-- **ETDucky subscriptions** — every provider the agent has enabled, with
-  resolution status. `✓` means the name (or GUID) resolves to a provider
-  present on this host; `✗` means it doesn't.
-- **Available providers not in config** — everything published on the host
-  that the agent isn't currently capturing.
-
-This tab is useful for ET Ducky users specifically, but it also serves as a
-worked example of how to parse an ETW subscription config and reconcile it
-against the host's published-provider inventory.
-
 ### Help tab
 
 Built-in primer covering the ETW concepts the rest of the UI references:
@@ -129,7 +111,7 @@ distinction. The same content the details panel pulls from.
 
 ```
 ETDucky.ProviderExplorer/
-├── MainForm.cs              WinForms UI, four tabs
+├── MainForm.cs              WinForms UI, three tabs
 ├── Program.cs               Entry point
 ├── app.manifest             Requests Administrator elevation on launch
 ├── Models/
@@ -138,7 +120,6 @@ ETDucky.ProviderExplorer/
 └── Services/
     ├── ProviderEnumerator.cs   Lists every published provider via TDH
     ├── ProviderSniffer.cs      Bounded/continuous subscribe + count + sample
-    ├── AgentConfigReader.cs    Parses AgentConfig.json (raw JSON)
     └── EtwReference.cs         Built-in glossary of standard opcodes/levels
 ```
 
@@ -167,8 +148,8 @@ agent that uses ETW on Windows and eBPF on Linux. This tool is a focused
 slice of that work: the provider catalog, the sniffer, and the
 manifest-driven decoder, with the educational surface added on top.
 
-The two repositories are independent. The agent uses a similar sniffer
-internally for cost profiling; this tool is the user-facing equivalent.
+The two are independent. The agent uses a similar sniffer internally for
+cost profiling; this tool is the standalone, user-facing equivalent.
 
 ## License
 

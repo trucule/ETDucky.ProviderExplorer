@@ -11,9 +11,11 @@ using ETDucky.ProviderExplorer.Services;
 namespace ETDucky.ProviderExplorer;
 
 /// <summary>
-/// Three-tab shell: browse providers, sniff one, diff against an AgentConfig.
-/// All UI built in code (no Designer file) for diff-friendliness and so the
-/// layout lives next to the logic that drives it.
+/// Three-tab shell: browse the host's published ETW providers, sniff one
+/// for cost/shape data with an educational drill-down, and a Help tab
+/// covering the underlying concepts. All UI built in code (no Designer
+/// file) for diff-friendliness and so the layout lives next to the logic
+/// that drives it.
 /// </summary>
 public sealed class MainForm : Form
 {
@@ -33,7 +35,6 @@ public sealed class MainForm : Form
     // ── State ────────────────────────────────────────────────────────────────
     private List<ProviderInfo> _allProviders = new();
     private SniffResult?       _lastSniff;
-    private AgentConfigSummary? _currentConfig;
     private CancellationTokenSource? _sniffCts;
 
     // ── Top-level controls ──────────────────────────────────────────────────
@@ -49,6 +50,26 @@ public sealed class MainForm : Form
         ForeColor       = TextPrimary;
         Font            = new Font("Segoe UI", 9f);
 
+        // Pull IDI_APPLICATION from the running .exe (embedded by the csproj's
+        // ApplicationIcon entry) and use it for the title bar and taskbar.
+        // ExtractAssociatedIcon returns null only if the binary has no icon
+        // resource at all — fail silently if that happens so a hand-built
+        // dev binary without an icon still launches.
+        try
+        {
+            var exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            if (!string.IsNullOrEmpty(exePath))
+            {
+                var ico = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
+                if (ico != null) Icon = ico;
+            }
+        }
+        catch
+        {
+            // Best-effort. A missing or unreadable icon is not worth blocking
+            // the form construction over.
+        }
+
         _tabs = new TabControl
         {
             Dock      = DockStyle.Fill,
@@ -57,7 +78,6 @@ public sealed class MainForm : Form
         };
         _tabs.TabPages.Add(BuildProvidersTab());
         _tabs.TabPages.Add(BuildSnifferTab());
-        _tabs.TabPages.Add(BuildDiffTab());
         _tabs.TabPages.Add(BuildHelpTab());
         Controls.Add(_tabs);
 
@@ -820,206 +840,7 @@ public sealed class MainForm : Form
     }
 
     // =========================================================================
-    // TAB 3 — AGENT CONFIG DIFF
-    // =========================================================================
-
-    private TextBox?      _diffPath;
-    private Label?        _diffStatus;
-    private DataGridView? _diffSubscribedGrid;
-    private DataGridView? _diffAvailableGrid;
-
-    private TabPage BuildDiffTab()
-    {
-        var page = new TabPage("Agent Diff") { BackColor = BgPage };
-
-        var root = new TableLayoutPanel
-        {
-            Dock        = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount    = 3,
-            BackColor   = BgPage,
-            Padding     = new Padding(8),
-        };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent,  100));
-
-        // ── Path picker ──
-        var pathPanel = new TableLayoutPanel
-        {
-            Dock        = DockStyle.Fill,
-            ColumnCount = 4,
-            RowCount    = 2,
-            BackColor   = BgCard,
-            Padding     = new Padding(10),
-        };
-        pathPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        pathPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,  100));
-        pathPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
-        pathPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
-
-        pathPanel.Controls.Add(NewMutedLabel("Config:"), 0, 0);
-        _diffPath = new TextBox
-        {
-            Dock        = DockStyle.Fill,
-            BackColor   = BgInput,
-            ForeColor   = TextPrimary,
-            BorderStyle = BorderStyle.FixedSingle,
-            Text        = AgentConfigReader.DefaultProductionPath,
-        };
-        pathPanel.Controls.Add(_diffPath, 1, 0);
-
-        var btnBrowse = NewButton("Browse…");
-        btnBrowse.Click += (_, _) =>
-        {
-            using var dlg = new OpenFileDialog
-            {
-                Title  = "Select AgentConfig.json",
-                Filter = "AgentConfig.json|AgentConfig.json|JSON files (*.json)|*.json|All files (*.*)|*.*",
-                InitialDirectory = System.IO.Path.GetDirectoryName(_diffPath.Text) ?? @"C:\ProgramData\ETDucky\Agent",
-            };
-            if (dlg.ShowDialog(this) == DialogResult.OK) _diffPath.Text = dlg.FileName;
-        };
-        pathPanel.Controls.Add(btnBrowse, 2, 0);
-
-        var btnLoad = NewButton("Load", primary: true);
-        btnLoad.Click += (_, _) => LoadAgentConfig();
-        pathPanel.Controls.Add(btnLoad, 3, 0);
-
-        var pathHint = new Label
-        {
-            Dock      = DockStyle.Fill,
-            ForeColor = TextMuted,
-            Font      = new Font("Segoe UI", 8f),
-            TextAlign = ContentAlignment.MiddleLeft,
-            Text      = "Defaults to the production install path. The file is mode 0600 on Linux and ACL-restricted on Windows — admin elevation may be required.",
-        };
-        pathPanel.SetColumnSpan(pathHint, 4);
-        pathPanel.Controls.Add(pathHint, 0, 1);
-
-        root.Controls.Add(pathPanel, 0, 0);
-
-        // ── Status ──
-        _diffStatus = new Label
-        {
-            Dock      = DockStyle.Fill,
-            ForeColor = TextMuted,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Text      = "Load an AgentConfig.json to see which providers the ET Ducky agent has enabled.",
-        };
-        root.Controls.Add(_diffStatus, 0, 1);
-
-        // ── Two grids side by side ──
-        var grids = new TableLayoutPanel
-        {
-            Dock        = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount    = 1,
-            BackColor   = BgPage,
-        };
-        grids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        grids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-
-        _diffSubscribedGrid = NewGrid();
-        _diffSubscribedGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Subscribed by ETDucky", DataPropertyName = "Name",    AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        _diffSubscribedGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Type",                  DataPropertyName = "Kind",    Width = 90 });
-        _diffSubscribedGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Status",                DataPropertyName = "Status",  Width = 140 });
-        grids.Controls.Add(WrapWithHeader("ETDucky subscriptions", _diffSubscribedGrid), 0, 0);
-
-        _diffAvailableGrid = NewGrid();
-        _diffAvailableGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Available but NOT subscribed", DataPropertyName = "Name", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        _diffAvailableGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "GUID",                          DataPropertyName = "Guid", Width = 280 });
-        grids.Controls.Add(WrapWithHeader("Available providers not in config", _diffAvailableGrid), 1, 0);
-
-        root.Controls.Add(grids, 0, 2);
-
-        page.Controls.Add(root);
-        return page;
-    }
-
-    private void LoadAgentConfig()
-    {
-        if (_diffPath == null || _diffStatus == null) return;
-
-        var summary = AgentConfigReader.TryRead(_diffPath.Text.Trim());
-        if (summary is null)
-        {
-            _currentConfig = null;
-            _diffStatus.ForeColor = Danger;
-            _diffStatus.Text = "Could not read config (file missing, malformed, or access denied).";
-            if (_diffSubscribedGrid != null) _diffSubscribedGrid.DataSource = null;
-            if (_diffAvailableGrid  != null) _diffAvailableGrid.DataSource  = null;
-            return;
-        }
-
-        _currentConfig = summary;
-        _diffStatus.ForeColor = TextMuted;
-        _diffStatus.Text =
-            $"Loaded {_currentConfig.Path}  ·  "
-          + $"{summary.KernelProviders.Count} kernel keyword(s), "
-          + $"{summary.UserModeProviders.Count} user-mode provider(s)";
-
-        RenderDiff();
-    }
-
-    private void RenderDiff()
-    {
-        if (_currentConfig == null || _diffSubscribedGrid == null || _diffAvailableGrid == null) return;
-
-        // Subscribed side: every entry from the config, with resolution status.
-        var availableByName = _allProviders.ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
-        var availableByGuid = _allProviders.ToDictionary(p => p.Guid, p => p);
-
-        var subscribed = new List<object>();
-        foreach (var name in _currentConfig.KernelProviders)
-        {
-            subscribed.Add(new
-            {
-                Name   = name,
-                Kind   = "kernel",
-                Status = "kernel keyword",
-            });
-        }
-        foreach (var entry in _currentConfig.UserModeProviders)
-        {
-            var resolved = ResolveProviderEntry(entry, availableByName, availableByGuid);
-            subscribed.Add(new
-            {
-                Name   = entry,
-                Kind   = "user-mode",
-                Status = resolved is null ? "✗ not found on this host" : $"✓ {resolved.Name}",
-            });
-        }
-        _diffSubscribedGrid.DataSource = subscribed;
-
-        // Available side: providers present on the host but NOT in config.
-        var subscribedGuids = new HashSet<Guid>();
-        foreach (var entry in _currentConfig.UserModeProviders)
-        {
-            var resolved = ResolveProviderEntry(entry, availableByName, availableByGuid);
-            if (resolved != null) subscribedGuids.Add(resolved.Guid);
-        }
-
-        var available = _allProviders
-            .Where(p => !subscribedGuids.Contains(p.Guid))
-            .Select(p => new { Name = p.Name, Guid = p.Guid.ToString("B") })
-            .ToList<object>();
-        _diffAvailableGrid.DataSource = available;
-    }
-
-    private static ProviderInfo? ResolveProviderEntry(
-        string entry,
-        IReadOnlyDictionary<string, ProviderInfo> byName,
-        IReadOnlyDictionary<Guid, ProviderInfo> byGuid)
-    {
-        if (byName.TryGetValue(entry, out var byname)) return byname;
-        if (Guid.TryParse(entry.Trim('{', '}'), out var guid) && byGuid.TryGetValue(guid, out var byguid))
-            return byguid;
-        return null;
-    }
-
-    // =========================================================================
-    // TAB 4 — HELP
+    // TAB 3 — HELP
     // =========================================================================
 
     private TabPage BuildHelpTab()
@@ -1243,31 +1064,6 @@ public sealed class MainForm : Form
             Padding            = new Padding(8, 2, 4, 2),
         },
     };
-
-    private static Control WrapWithHeader(string title, Control inner)
-    {
-        var panel = new TableLayoutPanel
-        {
-            Dock        = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount    = 2,
-            BackColor   = BgPage,
-            Margin      = new Padding(4),
-        };
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
-        panel.RowStyles.Add(new RowStyle(SizeType.Percent,  100));
-        panel.Controls.Add(new Label
-        {
-            Text      = title.ToUpperInvariant(),
-            Dock      = DockStyle.Fill,
-            ForeColor = TextMuted,
-            Font      = new Font("Segoe UI", 8f, FontStyle.Bold),
-            TextAlign = ContentAlignment.MiddleLeft,
-            Padding   = new Padding(4, 0, 0, 0),
-        }, 0, 0);
-        panel.Controls.Add(inner, 0, 1);
-        return panel;
-    }
 
     private sealed class ProviderRowViewModel
     {

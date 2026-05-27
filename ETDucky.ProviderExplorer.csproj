@@ -8,6 +8,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Embedded at build time as the PE resource IDI_APPLICATION. Windows
+         Explorer, taskbar, jump lists, and the WinForms title bar all pull
+         from this resource. The .ico file is multi-resolution (9 frames,
+         16x16 through 256x256) so scaling stays crisp at any DPI. -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>ETDucky.ProviderExplorer</AssemblyName>
     <RootNamespace>ETDucky.ProviderExplorer</RootNamespace>
