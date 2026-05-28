@@ -50,24 +50,23 @@ public sealed class MainForm : Form
         ForeColor       = TextPrimary;
         Font            = new Font("Segoe UI", 9f);
 
-        // Pull IDI_APPLICATION from the running .exe (embedded by the csproj's
-        // ApplicationIcon entry) and use it for the title bar and taskbar.
-        // ExtractAssociatedIcon returns null only if the binary has no icon
-        // resource at all — fail silently if that happens so a hand-built
-        // dev binary without an icon still launches.
+        // Load the multi-resolution app.ico from the assembly's embedded
+        // resources and assign to Form.Icon — this drives the title bar,
+        // taskbar, and Alt+Tab thumbnail. Loading from a stream (rather
+        // than ExtractAssociatedIcon on the .exe path) is the only approach
+        // that works in single-file published builds, where
+        // Assembly.Location returns empty.
         try
         {
-            var exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            if (!string.IsNullOrEmpty(exePath))
-            {
-                var ico = System.Drawing.Icon.ExtractAssociatedIcon(exePath);
-                if (ico != null) Icon = ico;
-            }
+            var asm = typeof(MainForm).Assembly;
+            var resName = asm.GetName().Name + ".app.ico";
+            using var stream = asm.GetManifestResourceStream(resName);
+            if (stream != null) Icon = new System.Drawing.Icon(stream);
         }
         catch
         {
-            // Best-effort. A missing or unreadable icon is not worth blocking
-            // the form construction over.
+            // Best-effort. A missing or unreadable resource is not worth
+            // blocking form construction over.
         }
 
         _tabs = new TabControl

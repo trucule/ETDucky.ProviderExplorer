@@ -1,11 +1,13 @@
 # ET Ducky Provider Explorer
 
 A standalone Windows tool for enumerating, profiling, and learning about
-**ETW providers** (Event Tracing for Windows). MIT-licensed, no telemetry,
-no cloud dependency, no agent required at runtime.
+**ETW providers** (Event Tracing for Windows). Open-source under the
+[Apache License 2.0](LICENSE). No telemetry, no cloud. This is a
+self-contained app that runs on its own without installing anything
+locally.
 
-Built on `Microsoft.Diagnostics.Tracing.TraceEvent`, the same library that
-backs PerfView and several Microsoft diagnostic tools.
+Built on `Microsoft.Diagnostics.Tracing.TraceEvent`, the same library
+that backs PerfView and several Microsoft diagnostic tools.
 
 ## What it does
 
@@ -22,14 +24,12 @@ Three tabs:
 
 ## Why it exists
 
-Most ETW tooling (`logman query providers`, `wevtutil`, PerfView's provider
-browser) is functional but does not explain itself. A user looking at
-"Opcode 20" or "Event ID 7937" with no context gets no help from the
-existing tools.
-
-The Provider Explorer is built to be the opposite: every column has a
-tooltip, every selected event gets an explanation pane, and the Help tab is
-a printable primer on the protocol.
+The Provider Explorer surfaces what existing ETW tooling
+(`logman query providers`, `wevtutil`, PerfView's provider browser)
+leaves implicit: every column has a tooltip, every selected event gets
+an explanation pane, and the Help tab is a printable primer on the
+protocol. A user looking at "Opcode 20" or "Event ID 7937" gets enough
+context to know what they're seeing.
 
 ## Download
 
@@ -153,7 +153,9 @@ cost profiling; this tool is the standalone, user-facing equivalent.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[Apache License 2.0](LICENSE). Free for any use — commercial or otherwise
+— with patent grant and trademark protection. See LICENSE for the full
+terms.
 
 ## Contributing
 

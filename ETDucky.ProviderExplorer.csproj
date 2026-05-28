@@ -32,6 +32,16 @@
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.3" GeneratePathProperty="true" />
   </ItemGroup>
 
+  <!-- Embed app.ico as a managed resource in addition to the PE
+       IDI_APPLICATION resource set by <ApplicationIcon>. The PE resource
+       drives the Explorer file icon; this embedded copy is what MainForm
+       loads at runtime to set Form.Icon (taskbar + title bar + Alt+Tab).
+       Required because Assembly.GetExecutingAssembly().Location returns
+       empty in single-file published builds, breaking ExtractAssociatedIcon. -->
+  <ItemGroup>
+    <EmbeddedResource Include="app.ico" />
+  </ItemGroup>
+
   <!-- Note: this project does NOT reference ETDucky.Core. It is built to stand
        alone so it can be carved out into a public MIT-licensed repo without
        pulling in agent-internal types. The AgentConfig diff tab reads
