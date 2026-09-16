@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ETDucky.ProviderExplorer.Models;
 using Microsoft.Diagnostics.Tracing.Session;
 
@@ -45,10 +42,10 @@ public static class ProviderEnumerator
         {
             result.Add(new ProviderInfo
             {
-                Guid     = guid,
-                Name     = ResolveName(guid),
+                Guid = guid,
+                Name = ResolveName(guid),
                 Keywords = ResolveKeywords(guid),
-                Levels   = ResolveLevels(guid),
+                Levels = ResolveLevels(guid),
             });
         }
 

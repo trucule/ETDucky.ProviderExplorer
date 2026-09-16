@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace ETDucky.ProviderExplorer.Services;
 
 /// <summary>
@@ -20,29 +17,29 @@ public static class EtwReference
     private static readonly IReadOnlyDictionary<int, OpcodeEntry> StandardOpcodes
         = new Dictionary<int, OpcodeEntry>
         {
-            [0]  = new("Info",      "Default opcode. The event records a state observation or a discrete fact; not part of a Start/Stop pair."),
-            [1]  = new("Start",     "Marks the beginning of an activity. A matching Stop event with the same ActivityID closes the activity. Used to measure duration and to scope correlated events."),
-            [2]  = new("Stop",      "Marks the end of an activity that began with a Start opcode on the same provider with the same ActivityID."),
-            [3]  = new("DCStart",   "Data Collection Start. Rundown event emitted when a tracing session begins, so the consumer learns the state that already existed before the session attached (e.g. processes already running)."),
-            [4]  = new("DCStop",    "Data Collection Stop. Rundown event emitted when a tracing session ends, mirroring DCStart for state that outlives the session."),
-            [5]  = new("Extension", "Indicates an event that extends another event. Rarely seen in user-mode providers."),
-            [6]  = new("Reply",     "Reply leg of a request/reply pair. Used by transport providers."),
-            [7]  = new("Resume",    "Resumes a previously suspended activity."),
-            [8]  = new("Suspend",   "Suspends an in-progress activity. A Resume opcode is expected to follow."),
-            [9]  = new("Send",      "Outgoing message in a transport provider. Pairs with Receive on the peer."),
-            [10] = new("Receive",   "Incoming message in a transport provider. Pairs with Send on the peer."),
+            [0] = new("Info", "Default opcode. The event records a state observation or a discrete fact; not part of a Start/Stop pair."),
+            [1] = new("Start", "Marks the beginning of an activity. A matching Stop event with the same ActivityID closes the activity. Used to measure duration and to scope correlated events."),
+            [2] = new("Stop", "Marks the end of an activity that began with a Start opcode on the same provider with the same ActivityID."),
+            [3] = new("DCStart", "Data Collection Start. Rundown event emitted when a tracing session begins, so the consumer learns the state that already existed before the session attached (e.g. processes already running)."),
+            [4] = new("DCStop", "Data Collection Stop. Rundown event emitted when a tracing session ends, mirroring DCStart for state that outlives the session."),
+            [5] = new("Extension", "Indicates an event that extends another event. Rarely seen in user-mode providers."),
+            [6] = new("Reply", "Reply leg of a request/reply pair. Used by transport providers."),
+            [7] = new("Resume", "Resumes a previously suspended activity."),
+            [8] = new("Suspend", "Suspends an in-progress activity. A Resume opcode is expected to follow."),
+            [9] = new("Send", "Outgoing message in a transport provider. Pairs with Receive on the peer."),
+            [10] = new("Receive", "Incoming message in a transport provider. Pairs with Send on the peer."),
         };
 
     // ── Standard severity levels (winmeta:LevelType) ─────────────────────────
     private static readonly IReadOnlyDictionary<int, LevelEntry> StandardLevels
         = new Dictionary<int, LevelEntry>
         {
-            [0] = new("LogAlways",     "Always emitted regardless of the session's level filter. Used for events that must never be dropped (e.g. provider shutdown notices)."),
-            [1] = new("Critical",      "Abnormal termination. The provider is reporting that something has failed in a way that prevents further useful work."),
-            [2] = new("Error",         "A failure occurred but the provider continued. Equivalent to a logged exception."),
-            [3] = new("Warning",       "Something unusual happened that did not cause a failure but may indicate a developing problem."),
+            [0] = new("LogAlways", "Always emitted regardless of the session's level filter. Used for events that must never be dropped (e.g. provider shutdown notices)."),
+            [1] = new("Critical", "Abnormal termination. The provider is reporting that something has failed in a way that prevents further useful work."),
+            [2] = new("Error", "A failure occurred but the provider continued. Equivalent to a logged exception."),
+            [3] = new("Warning", "Something unusual happened that did not cause a failure but may indicate a developing problem."),
             [4] = new("Informational", "Routine activity. Most production-tier events sit at this level."),
-            [5] = new("Verbose",       "Detailed activity intended for debugging. Often high-volume; enabling Verbose on a busy provider can produce thousands of events per second."),
+            [5] = new("Verbose", "Detailed activity intended for debugging. Often high-volume; enabling Verbose on a busy provider can produce thousands of events per second."),
         };
 
     // ── Standard channels (winmeta:ChannelType) ──────────────────────────────
@@ -52,10 +49,10 @@ public static class EtwReference
     private static readonly IReadOnlyDictionary<int, ChannelEntry> StandardChannels
         = new Dictionary<int, ChannelEntry>
         {
-            [16] = new("Admin",       "Surfaced to administrators in the main Event Log views. Events here are written for an end-user audience and should be actionable."),
+            [16] = new("Admin", "Surfaced to administrators in the main Event Log views. Events here are written for an end-user audience and should be actionable."),
             [17] = new("Operational", "Surfaced under Applications and Services Logs. Routine operational events that diagnostic tools consume."),
-            [18] = new("Analytic",    "High-volume diagnostic events that the Event Log keeps disabled by default. Enabled on demand for deep analysis."),
-            [19] = new("Debug",       "Developer-targeted events, disabled by default. Equivalent to Analytic for the debugging audience."),
+            [18] = new("Analytic", "High-volume diagnostic events that the Event Log keeps disabled by default. Enabled on demand for deep analysis."),
+            [19] = new("Debug", "Developer-targeted events, disabled by default. Equivalent to Analytic for the debugging audience."),
         };
 
     /// <summary>
@@ -91,7 +88,7 @@ public static class EtwReference
         if (string.IsNullOrWhiteSpace(opcodeText)) return null;
 
         // Common shapes from TDH: "Opcode(20)", "Start", "Stop", "Info".
-        var open  = opcodeText.IndexOf('(');
+        var open = opcodeText.IndexOf('(');
         var close = opcodeText.IndexOf(')');
         if (open >= 0 && close > open + 1)
         {

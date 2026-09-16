@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using ETDucky.ProviderExplorer.Models;
 using ETDucky.ProviderExplorer.Services;
+using System.Globalization;
 
 namespace ETDucky.ProviderExplorer;
 
@@ -20,21 +14,21 @@ namespace ETDucky.ProviderExplorer;
 public sealed class MainForm : Form
 {
     // ── Palette (mirror of the agent applets so the family feels coherent) ──
-    private static readonly Color BgPage       = Color.FromArgb(18, 18, 24);
-    private static readonly Color BgCard       = Color.FromArgb(30, 30, 42);
-    private static readonly Color BgInput      = Color.FromArgb(26, 26, 38);
-    private static readonly Color Accent       = Color.FromArgb(0, 180, 219);
-    private static readonly Color Subtle       = Color.FromArgb(50, 50, 65);
-    private static readonly Color TextPrimary  = Color.FromArgb(220, 220, 230);
-    private static readonly Color TextMuted    = Color.FromArgb(120, 120, 140);
-    private static readonly Color Border       = Color.FromArgb(40, 40, 55);
-    private static readonly Color Success      = Color.FromArgb(34, 197, 94);
-    private static readonly Color Warning      = Color.FromArgb(217, 140, 0);
-    private static readonly Color Danger       = Color.FromArgb(239, 68, 68);
+    private static readonly Color BgPage = Color.FromArgb(18, 18, 24);
+    private static readonly Color BgCard = Color.FromArgb(30, 30, 42);
+    private static readonly Color BgInput = Color.FromArgb(26, 26, 38);
+    private static readonly Color Accent = Color.FromArgb(0, 180, 219);
+    private static readonly Color Subtle = Color.FromArgb(50, 50, 65);
+    private static readonly Color TextPrimary = Color.FromArgb(220, 220, 230);
+    private static readonly Color TextMuted = Color.FromArgb(120, 120, 140);
+    private static readonly Color Border = Color.FromArgb(40, 40, 55);
+    private static readonly Color Success = Color.FromArgb(34, 197, 94);
+    private static readonly Color Warning = Color.FromArgb(217, 140, 0);
+    private static readonly Color Danger = Color.FromArgb(239, 68, 68);
 
     // ── State ────────────────────────────────────────────────────────────────
     private List<ProviderInfo> _allProviders = new();
-    private SniffResult?       _lastSniff;
+    private SniffResult? _lastSniff;
     private CancellationTokenSource? _sniffCts;
 
     // ── Top-level controls ──────────────────────────────────────────────────
@@ -42,13 +36,13 @@ public sealed class MainForm : Form
 
     public MainForm()
     {
-        Text            = "ET Ducky Provider Explorer";
-        ClientSize      = new Size(1200, 720);
-        MinimumSize     = new Size(900, 560);
-        StartPosition   = FormStartPosition.CenterScreen;
-        BackColor       = BgPage;
-        ForeColor       = TextPrimary;
-        Font            = new Font("Segoe UI", 9f);
+        Text = "ET Ducky Provider Explorer";
+        ClientSize = new Size(1200, 720);
+        MinimumSize = new Size(900, 560);
+        StartPosition = FormStartPosition.CenterScreen;
+        BackColor = BgPage;
+        ForeColor = TextPrimary;
+        Font = new Font("Segoe UI", 9f);
 
         // Load the multi-resolution app.ico from the assembly's embedded
         // resources and assign to Form.Icon — this drives the title bar,
@@ -71,9 +65,9 @@ public sealed class MainForm : Form
 
         _tabs = new TabControl
         {
-            Dock      = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             Appearance = TabAppearance.Normal,
-            SizeMode  = TabSizeMode.Normal,
+            SizeMode = TabSizeMode.Normal,
         };
         _tabs.TabPages.Add(BuildProvidersTab());
         _tabs.TabPages.Add(BuildSnifferTab());
@@ -91,10 +85,10 @@ public sealed class MainForm : Form
     // =========================================================================
 
     private DataGridView? _providerGrid;
-    private TextBox?      _providerFilter;
-    private Label?        _providerStatus;
-    private TextBox?      _providerDetail;
-    private Button?       _btnSniffSelected;
+    private TextBox? _providerFilter;
+    private Label? _providerStatus;
+    private TextBox? _providerDetail;
+    private Button? _btnSniffSelected;
 
     private TabPage BuildProvidersTab()
     {
@@ -102,35 +96,35 @@ public sealed class MainForm : Form
 
         var root = new TableLayoutPanel
         {
-            Dock        = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount    = 3,
-            BackColor   = BgPage,
-            Padding     = new Padding(8),
+            RowCount = 3,
+            BackColor = BgPage,
+            Padding = new Padding(8),
         };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent,  60));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent,  40));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 60));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 40));
 
         // ── Filter + status ──
         var top = new TableLayoutPanel
         {
-            Dock        = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ColumnCount = 4,
-            RowCount    = 1,
-            BackColor   = BgPage,
+            RowCount = 1,
+            BackColor = BgPage,
         };
         top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60));
-        top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,  100));
+        top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
         top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200));
 
         top.Controls.Add(new Label { Text = "Filter:", ForeColor = TextMuted, TextAlign = ContentAlignment.MiddleLeft, Dock = DockStyle.Fill }, 0, 0);
         _providerFilter = new TextBox
         {
-            Dock        = DockStyle.Fill,
-            BackColor   = BgInput,
-            ForeColor   = TextPrimary,
+            Dock = DockStyle.Fill,
+            BackColor = BgInput,
+            ForeColor = TextPrimary,
             BorderStyle = BorderStyle.FixedSingle,
             PlaceholderText = "type to filter by name or GUID…",
         };
@@ -143,20 +137,20 @@ public sealed class MainForm : Form
 
         _providerStatus = new Label
         {
-            Dock      = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ForeColor = TextMuted,
             TextAlign = ContentAlignment.MiddleRight,
-            Text      = "Loading…",
+            Text = "Loading…",
         };
         top.Controls.Add(_providerStatus, 3, 0);
         root.Controls.Add(top, 0, 0);
 
         // ── Provider grid ──
         _providerGrid = NewGrid();
-        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Name",     DataPropertyName = "Name",          AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ToolTipText = "Friendly name as registered in the provider's manifest. The Help tab explains what a provider is." });
-        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "GUID",     DataPropertyName = "GuidDisplay",   Width = 280, ToolTipText = "Canonical identifier for the provider. ETW sessions subscribe by GUID; the friendly name is convenience metadata only." });
-        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Keywords", DataPropertyName = "KeywordCount",  Width = 80, ToolTipText = "Number of keyword bits the provider declares in its manifest. Keywords are how subscribers filter which subsets of the provider's events they receive." });
-        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Levels",   DataPropertyName = "LevelCount",    Width = 80, ToolTipText = "Number of severity levels available (always 5 standard levels: Critical, Error, Warning, Informational, Verbose)." });
+        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Name", DataPropertyName = "Name", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ToolTipText = "Friendly name as registered in the provider's manifest. The Help tab explains what a provider is." });
+        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "GUID", DataPropertyName = "GuidDisplay", Width = 280, ToolTipText = "Canonical identifier for the provider. ETW sessions subscribe by GUID; the friendly name is convenience metadata only." });
+        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Keywords", DataPropertyName = "KeywordCount", Width = 80, ToolTipText = "Number of keyword bits the provider declares in its manifest. Keywords are how subscribers filter which subsets of the provider's events they receive." });
+        _providerGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Levels", DataPropertyName = "LevelCount", Width = 80, ToolTipText = "Number of severity levels available (always 5 standard levels: Critical, Error, Warning, Informational, Verbose)." });
         _providerGrid.SelectionChanged += (_, _) => ShowProviderDetail();
 
         // Right-click → select the row under the cursor and show the context
@@ -194,33 +188,33 @@ public sealed class MainForm : Form
         // ── Detail pane ──
         var detail = new TableLayoutPanel
         {
-            Dock        = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount    = 2,
-            BackColor   = BgCard,
+            RowCount = 2,
+            BackColor = BgCard,
         };
-        detail.RowStyles.Add(new RowStyle(SizeType.Percent,  100));
+        detail.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         detail.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
 
         _providerDetail = new TextBox
         {
-            Dock        = DockStyle.Fill,
-            Multiline   = true,
-            ReadOnly    = true,
-            ScrollBars  = ScrollBars.Vertical,
-            BackColor   = BgCard,
-            ForeColor   = TextPrimary,
+            Dock = DockStyle.Fill,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            BackColor = BgCard,
+            ForeColor = TextPrimary,
             BorderStyle = BorderStyle.None,
-            Font        = new Font("Consolas", 9f),
+            Font = new Font("Consolas", 9f),
         };
         detail.Controls.Add(_providerDetail, 0, 0);
 
         var actions = new FlowLayoutPanel
         {
-            Dock          = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.RightToLeft,
-            BackColor     = BgCard,
-            Padding       = new Padding(8),
+            BackColor = BgCard,
+            Padding = new Padding(8),
         };
         _btnSniffSelected = NewButton("Sniff this provider →", primary: true);
         _btnSniffSelected.Enabled = false;
@@ -260,11 +254,11 @@ public sealed class MainForm : Form
         var rows = visible
             .Select(p => new ProviderRowViewModel
             {
-                Name          = p.Name,
-                GuidDisplay   = p.Guid.ToString("B"),
-                KeywordCount  = p.Keywords.Count,
-                LevelCount    = p.Levels.Count,
-                Source        = p,
+                Name = p.Name,
+                GuidDisplay = p.Guid.ToString("B"),
+                KeywordCount = p.Keywords.Count,
+                LevelCount = p.Levels.Count,
+                Source = p,
             })
             .ToList();
 
@@ -284,18 +278,18 @@ public sealed class MainForm : Form
 
         var p = vm.Source;
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"Name      : {p.Name}");
-        sb.AppendLine($"GUID      : {p.Guid:B}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Name      : {p.Name}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"GUID      : {p.Guid:B}");
         sb.AppendLine();
-        sb.AppendLine($"Keywords ({p.Keywords.Count}):");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Keywords ({p.Keywords.Count}):");
         if (p.Keywords.Count == 0) sb.AppendLine("  (none declared in the manifest visible to this process)");
         foreach (var k in p.Keywords.OrderBy(k => k.Mask))
-            sb.AppendLine($"  0x{k.Mask:X16}  {k.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  0x{k.Mask:X16}  {k.Name}");
         sb.AppendLine();
-        sb.AppendLine($"Levels ({p.Levels.Count}):");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Levels ({p.Levels.Count}):");
         if (p.Levels.Count == 0) sb.AppendLine("  (none declared)");
         foreach (var l in p.Levels.OrderBy(l => l.Value))
-            sb.AppendLine($"  {l.Value}  {l.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {l.Value}  {l.Name}");
 
         _providerDetail.Text = sb.ToString();
         _btnSniffSelected.Enabled = true;
@@ -307,26 +301,26 @@ public sealed class MainForm : Form
         var row = _providerGrid.SelectedRows.Cast<DataGridViewRow>().FirstOrDefault();
         if (row?.DataBoundItem is not ProviderRowViewModel vm) return;
 
-        _snifferGuidBox.Text   = vm.Source.Guid.ToString("B");
+        _snifferGuidBox.Text = vm.Source.Guid.ToString("B");
         _snifferNameLabel.Text = vm.Source.Name;
-        _tabs.SelectedIndex    = 1;
+        _tabs.SelectedIndex = 1;
     }
 
     // =========================================================================
     // TAB 2 — SNIFFER
     // =========================================================================
 
-    private TextBox?     _snifferGuidBox;
-    private Label?       _snifferNameLabel;
+    private TextBox? _snifferGuidBox;
+    private Label? _snifferNameLabel;
     private NumericUpDown? _snifferDuration;
-    private CheckBox?    _snifferContinuous;
-    private Button?      _btnSniffStart;
-    private Button?      _btnSniffCancel;
-    private Label?       _snifferSummary;
+    private CheckBox? _snifferContinuous;
+    private Button? _btnSniffStart;
+    private Button? _btnSniffCancel;
+    private Label? _snifferSummary;
     private DataGridView? _sniffGrid;
     private ProgressBar? _sniffProgress;
-    private TextBox?     _sniffDetail;
-    private Label?       _sniffDetailHeader;
+    private TextBox? _sniffDetail;
+    private Label? _sniffDetailHeader;
 
     private TabPage BuildSnifferTab()
     {
@@ -334,11 +328,11 @@ public sealed class MainForm : Form
 
         var root = new TableLayoutPanel
         {
-            Dock        = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount    = 4,
-            BackColor   = BgPage,
-            Padding     = new Padding(8),
+            RowCount = 4,
+            BackColor = BgPage,
+            Padding = new Padding(8),
         };
         // Heights are explicit so labels with multi-line/tall text don't get
         // clipped at the row boundary. The summary row in particular has to
@@ -346,19 +340,19 @@ public sealed class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 130));  // ctrl panel
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 6));    // progress
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 90));   // summary (multi-line tip when no events)
-        root.RowStyles.Add(new RowStyle(SizeType.Percent,  100));  // breakdown grid
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // breakdown grid
 
         // ── Control panel ──
         var ctrl = new TableLayoutPanel
         {
-            Dock        = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ColumnCount = 5,
-            RowCount    = 3,
-            BackColor   = BgCard,
-            Padding     = new Padding(10),
+            RowCount = 3,
+            BackColor = BgCard,
+            Padding = new Padding(10),
         };
         ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,  100));
+        ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
         ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         ctrl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
@@ -372,11 +366,11 @@ public sealed class MainForm : Form
         ctrl.Controls.Add(NewMutedLabel("Provider:"), 0, 0);
         _snifferGuidBox = new TextBox
         {
-            Dock        = DockStyle.Fill,
-            BackColor   = BgInput,
-            ForeColor   = TextPrimary,
+            Dock = DockStyle.Fill,
+            BackColor = BgInput,
+            ForeColor = TextPrimary,
             BorderStyle = BorderStyle.FixedSingle,
-            Font        = new Font("Consolas", 9f),
+            Font = new Font("Consolas", 9f),
             PlaceholderText = "{GUID} — pick one from the Providers tab",
         };
         // When the user types or pastes a GUID directly, look it up against the
@@ -388,13 +382,13 @@ public sealed class MainForm : Form
         ctrl.Controls.Add(NewMutedLabel("Duration:"), 2, 0);
         _snifferDuration = new NumericUpDown
         {
-            Dock      = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             BackColor = BgInput,
             ForeColor = TextPrimary,
             BorderStyle = BorderStyle.FixedSingle,
-            Minimum   = 1,
-            Maximum   = 600,
-            Value     = 10,
+            Minimum = 1,
+            Maximum = 600,
+            Value = 10,
             Increment = 1,
         };
         ctrl.Controls.Add(_snifferDuration, 3, 0);
@@ -406,10 +400,10 @@ public sealed class MainForm : Form
         ctrl.Controls.Add(NewMutedLabel("Name:"), 0, 1);
         _snifferNameLabel = new Label
         {
-            Dock      = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ForeColor = TextPrimary,
             TextAlign = ContentAlignment.MiddleLeft,
-            Text      = "(none selected)",
+            Text = "(none selected)",
         };
         ctrl.SetColumnSpan(_snifferNameLabel, 2);
         ctrl.Controls.Add(_snifferNameLabel, 1, 1);
@@ -421,8 +415,8 @@ public sealed class MainForm : Form
         // refresh once a second via IProgress<SniffResult>.
         _snifferContinuous = new CheckBox
         {
-            Text      = "Continuous",
-            Dock      = DockStyle.Fill,
+            Text = "Continuous",
+            Dock = DockStyle.Fill,
             BackColor = BgCard,
             ForeColor = TextPrimary,
             TextAlign = ContentAlignment.MiddleLeft,
@@ -442,11 +436,11 @@ public sealed class MainForm : Form
 
         var hint = new Label
         {
-            Dock      = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ForeColor = TextMuted,
-            Font      = new Font("Segoe UI", 8f),
+            Font = new Font("Segoe UI", 8f),
             TextAlign = ContentAlignment.MiddleLeft,
-            Text      = "v1 subscribes with the broadest keyword mask and Verbose level — a worst-case event-volume measurement.",
+            Text = "v1 subscribes with the broadest keyword mask and Verbose level — a worst-case event-volume measurement.",
         };
         ctrl.SetColumnSpan(hint, 5);
         ctrl.Controls.Add(hint, 0, 2);
@@ -456,8 +450,8 @@ public sealed class MainForm : Form
         // ── Progress bar ──
         _sniffProgress = new ProgressBar
         {
-            Dock    = DockStyle.Fill,
-            Style   = ProgressBarStyle.Marquee,
+            Dock = DockStyle.Fill,
+            Style = ProgressBarStyle.Marquee,
             Visible = false,
         };
         root.Controls.Add(_sniffProgress, 0, 1);
@@ -468,11 +462,11 @@ public sealed class MainForm : Form
         // instead of being vertically centred and clipped.
         _snifferSummary = new Label
         {
-            Dock         = DockStyle.Fill,
-            TextAlign    = ContentAlignment.TopLeft,
-            ForeColor    = TextMuted,
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.TopLeft,
+            ForeColor = TextMuted,
             AutoEllipsis = false,
-            Text         = "Run a sniff to populate the breakdown.",
+            Text = "Run a sniff to populate the breakdown.",
         };
         root.Controls.Add(_snifferSummary, 0, 2);
 
@@ -487,57 +481,57 @@ public sealed class MainForm : Form
         // up by string indexer (Cells["EventId"]) in RenderSelectedSniffDetail.
         // Without Name=, the column's Name property defaults to empty and the
         // string indexer throws.
-        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "EventId",  HeaderText = "Event ID", DataPropertyName = "EventId", Width = 100, ToolTipText = "Provider-assigned identifier for this specific message. Scoped to the provider — the same number on a different provider means something different." });
-        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "TaskName", HeaderText = "Task",     DataPropertyName = "TaskName", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ToolTipText = "Provider-defined category for the event. Often the subsystem or function area inside the provider (e.g. 'Process', 'Disk')." });
-        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Opcode",   HeaderText = "Opcode",   DataPropertyName = "Opcode",   Width = 200, ToolTipText = "What kind of point in time this event represents. Standard values (Start, Stop, Info, etc.) come from the ETW protocol; values 11+ are provider-defined." });
-        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Count",    HeaderText = "Count",    DataPropertyName = "Count",    Width = 120, ToolTipText = "Number of times this exact (Event ID, Task, Opcode) combination fired during the sniff window." });
+        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "EventId", HeaderText = "Event ID", DataPropertyName = "EventId", Width = 100, ToolTipText = "Provider-assigned identifier for this specific message. Scoped to the provider — the same number on a different provider means something different." });
+        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "TaskName", HeaderText = "Task", DataPropertyName = "TaskName", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ToolTipText = "Provider-defined category for the event. Often the subsystem or function area inside the provider (e.g. 'Process', 'Disk')." });
+        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Opcode", HeaderText = "Opcode", DataPropertyName = "Opcode", Width = 200, ToolTipText = "What kind of point in time this event represents. Standard values (Start, Stop, Info, etc.) come from the ETW protocol; values 11+ are provider-defined." });
+        _sniffGrid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Count", HeaderText = "Count", DataPropertyName = "Count", Width = 120, ToolTipText = "Number of times this exact (Event ID, Task, Opcode) combination fired during the sniff window." });
 
         _sniffGrid.SelectionChanged += (_, _) => RenderSelectedSniffDetail();
 
         var split = new SplitContainer
         {
-            Dock              = DockStyle.Fill,
-            Orientation       = Orientation.Vertical,
-            BackColor         = BgPage,
-            SplitterWidth     = 6,
-            FixedPanel        = FixedPanel.Panel2,
+            Dock = DockStyle.Fill,
+            Orientation = Orientation.Vertical,
+            BackColor = BgPage,
+            SplitterWidth = 6,
+            FixedPanel = FixedPanel.Panel2,
         };
         split.Panel1.Controls.Add(_sniffGrid);
 
         // Right-side detail panel: header + scrollable text.
         var detailPanel = new TableLayoutPanel
         {
-            Dock        = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount    = 2,
-            BackColor   = BgCard,
+            RowCount = 2,
+            BackColor = BgCard,
         };
         detailPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
-        detailPanel.RowStyles.Add(new RowStyle(SizeType.Percent,  100));
+        detailPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         _sniffDetailHeader = new Label
         {
-            Dock      = DockStyle.Fill,
+            Dock = DockStyle.Fill,
             ForeColor = TextMuted,
-            Font      = new Font("Segoe UI", 8f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 8f, FontStyle.Bold),
             TextAlign = ContentAlignment.MiddleLeft,
-            Padding   = new Padding(10, 0, 8, 0),
-            Text      = "EVENT DETAILS",
+            Padding = new Padding(10, 0, 8, 0),
+            Text = "EVENT DETAILS",
         };
         detailPanel.Controls.Add(_sniffDetailHeader, 0, 0);
 
         _sniffDetail = new TextBox
         {
-            Dock        = DockStyle.Fill,
-            Multiline   = true,
-            ReadOnly    = true,
-            ScrollBars  = ScrollBars.Vertical,
-            BackColor   = BgCard,
-            ForeColor   = TextPrimary,
+            Dock = DockStyle.Fill,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            BackColor = BgCard,
+            ForeColor = TextPrimary,
             BorderStyle = BorderStyle.None,
-            Font        = new Font("Consolas", 9f),
-            Text        = "Select a row in the breakdown grid to see what the event ID, opcode, and sampled payloads mean.",
-            WordWrap    = true,
+            Font = new Font("Consolas", 9f),
+            Text = "Select a row in the breakdown grid to see what the event ID, opcode, and sampled payloads mean.",
+            WordWrap = true,
         };
         detailPanel.Controls.Add(_sniffDetail, 0, 1);
         split.Panel2.Controls.Add(detailPanel);
@@ -573,17 +567,17 @@ public sealed class MainForm : Form
         }
 
         // The grid is bound to anonymous-object rows; read the columns by name.
-        int eventId   = (int)(row.Cells["EventId"].Value ?? 0);
-        string task   = row.Cells["TaskName"].Value?.ToString() ?? "";
+        int eventId = (int)(row.Cells["EventId"].Value ?? 0);
+        string task = row.Cells["TaskName"].Value?.ToString() ?? "";
         string opcode = row.Cells["Opcode"].Value?.ToString() ?? "";
-        long count    = Convert.ToInt64(row.Cells["Count"].Value ?? 0L);
+        long count = Convert.ToInt64(row.Cells["Count"].Value ?? 0L, CultureInfo.InvariantCulture);
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"Provider : {_lastSniff.ProviderName}");
-        sb.AppendLine($"Event ID : {eventId}");
-        sb.AppendLine($"Task     : {(string.IsNullOrEmpty(task) ? "(none declared by the provider)" : task)}");
-        sb.AppendLine($"Opcode   : {(string.IsNullOrEmpty(opcode) ? "(none declared)" : opcode)}");
-        sb.AppendLine($"Count    : {count:N0} over {_lastSniff.Duration.TotalSeconds:0.0}s ({(count / Math.Max(_lastSniff.Duration.TotalSeconds, 0.001)):N1}/s)");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Provider : {_lastSniff.ProviderName}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Event ID : {eventId}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Task     : {(string.IsNullOrEmpty(task) ? "(none declared by the provider)" : task)}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Opcode   : {(string.IsNullOrEmpty(opcode) ? "(none declared)" : opcode)}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Count    : {count:N0} over {_lastSniff.Duration.TotalSeconds:0.0}s ({(count / Math.Max(_lastSniff.Duration.TotalSeconds, 0.001)):N1}/s)");
         sb.AppendLine();
 
         // Event ID explanation — generic but factual, since the meaning of an
@@ -602,12 +596,12 @@ public sealed class MainForm : Form
 
         if (opcodeEntry != null)
         {
-            sb.AppendLine($"{opcodeEntry.Name} — standard ETW opcode.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{opcodeEntry.Name} — standard ETW opcode.");
             sb.AppendLine(WordWrap(opcodeEntry.Description, 80));
         }
         else if (opcodeNum.HasValue)
         {
-            sb.AppendLine($"Value {opcodeNum.Value} — provider-defined opcode.");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Value {opcodeNum.Value} — provider-defined opcode.");
             sb.AppendLine("Standard ETW reserves values 0–10 for protocol opcodes (Info, Start, Stop, DCStart, DCStop, Extension, Reply, Resume, Suspend, Send, Receive). Values 11 and above are defined by the provider in its own manifest; the friendly name (when present) appears above next to 'Opcode'.");
         }
         else
@@ -623,14 +617,14 @@ public sealed class MainForm : Form
         var key = new EventBreakdownKey(eventId, task, opcode);
         if (_lastSniff.Samples.TryGetValue(key, out var samples) && samples.Count > 0)
         {
-            sb.AppendLine($"{samples.Count} decoded sample(s) of this event captured during the sniff:");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"{samples.Count} decoded sample(s) of this event captured during the sniff:");
             sb.AppendLine();
             for (var i = 0; i < samples.Count; i++)
             {
                 var s = samples[i];
-                sb.AppendLine($"── Sample {i + 1} ──");
-                sb.AppendLine($"timestamp : {s.TimestampUtc:yyyy-MM-dd HH:mm:ss.fff} UTC");
-                sb.AppendLine($"process   : PID {s.ProcessId}, TID {s.ThreadId}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"── Sample {i + 1} ──");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"timestamp : {s.TimestampUtc:yyyy-MM-dd HH:mm:ss.fff} UTC");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"process   : PID {s.ProcessId}, TID {s.ThreadId}");
 
                 if (!string.IsNullOrWhiteSpace(s.FormattedMessage))
                 {
@@ -644,7 +638,7 @@ public sealed class MainForm : Form
                     sb.AppendLine();
                     sb.AppendLine("payload fields:");
                     foreach (var field in s.Payload)
-                        sb.AppendLine($"  {field.Name} = {field.Value}");
+                        sb.AppendLine(CultureInfo.InvariantCulture, $"  {field.Name} = {field.Value}");
                 }
                 else
                 {
@@ -706,9 +700,9 @@ public sealed class MainForm : Form
             return;
         }
 
-        var name         = _snifferNameLabel?.Text ?? guid.ToString("B");
+        var name = _snifferNameLabel?.Text ?? guid.ToString("B");
         var isContinuous = _snifferContinuous?.Checked == true;
-        var duration     = isContinuous
+        var duration = isContinuous
             ? TimeSpan.MaxValue
             : TimeSpan.FromSeconds((double)_snifferDuration.Value);
 
@@ -749,9 +743,9 @@ public sealed class MainForm : Form
 
     private void SetSniffRunning(bool running)
     {
-        if (_btnSniffStart  != null) _btnSniffStart.Enabled  = !running;
+        if (_btnSniffStart != null) _btnSniffStart.Enabled = !running;
         if (_btnSniffCancel != null) _btnSniffCancel.Enabled = running;
-        if (_sniffProgress  != null) _sniffProgress.Visible  = running;
+        if (_sniffProgress != null) _sniffProgress.Visible = running;
     }
 
     private void RenderSniffResult(SniffResult result)
@@ -842,7 +836,7 @@ public sealed class MainForm : Form
     // TAB 3 — HELP
     // =========================================================================
 
-    private TabPage BuildHelpTab()
+    private static TabPage BuildHelpTab()
     {
         var page = new TabPage("Help") { BackColor = BgPage };
 
@@ -853,15 +847,15 @@ public sealed class MainForm : Form
         // references, gathered in one place.
         var textBox = new TextBox
         {
-            Dock        = DockStyle.Fill,
-            Multiline   = true,
-            ReadOnly    = true,
-            ScrollBars  = ScrollBars.Vertical,
-            BackColor   = BgPage,
-            ForeColor   = TextPrimary,
+            Dock = DockStyle.Fill,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            BackColor = BgPage,
+            ForeColor = TextPrimary,
             BorderStyle = BorderStyle.None,
-            Font        = new Font("Consolas", 9.5f),
-            WordWrap    = true,
+            Font = new Font("Consolas", 9.5f),
+            WordWrap = true,
         };
 
         var sb = new System.Text.StringBuilder();
@@ -924,7 +918,7 @@ public sealed class MainForm : Form
         foreach (var (value, entry) in EtwReference.EnumerateOpcodes())
         {
             sb.AppendLine();
-            sb.AppendLine($"  {value,2}  {entry.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {value,2}  {entry.Name}");
             sb.AppendLine(WordWrap(entry.Description, 76, indent: "      "));
         }
         sb.AppendLine();
@@ -939,7 +933,7 @@ public sealed class MainForm : Form
         foreach (var (value, entry) in EtwReference.EnumerateLevels())
         {
             sb.AppendLine();
-            sb.AppendLine($"  {value}  {entry.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {value}  {entry.Name}");
             sb.AppendLine(WordWrap(entry.Description, 76, indent: "     "));
         }
         sb.AppendLine();
@@ -962,7 +956,7 @@ public sealed class MainForm : Form
         foreach (var (value, entry) in EtwReference.EnumerateChannels())
         {
             sb.AppendLine();
-            sb.AppendLine($"  {value}  {entry.Name}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {value}  {entry.Name}");
             sb.AppendLine(WordWrap(entry.Description, 76, indent: "      "));
         }
         sb.AppendLine();
@@ -1005,24 +999,24 @@ public sealed class MainForm : Form
 
     private static Label NewMutedLabel(string text) => new()
     {
-        Text      = text,
+        Text = text,
         ForeColor = TextMuted,
         TextAlign = ContentAlignment.MiddleLeft,
-        Dock      = DockStyle.Fill,
+        Dock = DockStyle.Fill,
     };
 
     private static Button NewButton(string text, bool primary = false)
     {
         var b = new Button
         {
-            Text      = text,
-            Dock      = DockStyle.Fill,
-            Height    = 28,
-            Margin    = new Padding(4),
+            Text = text,
+            Dock = DockStyle.Fill,
+            Height = 28,
+            Margin = new Padding(4),
             BackColor = primary ? Accent : Subtle,
             ForeColor = primary ? Color.White : TextPrimary,
             FlatStyle = FlatStyle.Flat,
-            Font      = new Font("Segoe UI", 9f),
+            Font = new Font("Segoe UI", 9f),
         };
         b.FlatAppearance.BorderSize = 0;
         return b;
@@ -1030,46 +1024,46 @@ public sealed class MainForm : Form
 
     private static DataGridView NewGrid() => new()
     {
-        Dock                            = DockStyle.Fill,
-        BackgroundColor                 = BgCard,
-        GridColor                       = Border,
-        BorderStyle                     = BorderStyle.None,
-        RowHeadersVisible               = false,
-        AutoGenerateColumns             = false,
-        AllowUserToAddRows              = false,
-        AllowUserToDeleteRows           = false,
-        AllowUserToResizeRows           = false,
-        ReadOnly                        = true,
-        SelectionMode                   = DataGridViewSelectionMode.FullRowSelect,
-        MultiSelect                     = false,
-        EnableHeadersVisualStyles       = false,
-        ColumnHeadersHeightSizeMode     = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-        ColumnHeadersDefaultCellStyle   = new DataGridViewCellStyle
+        Dock = DockStyle.Fill,
+        BackgroundColor = BgCard,
+        GridColor = Border,
+        BorderStyle = BorderStyle.None,
+        RowHeadersVisible = false,
+        AutoGenerateColumns = false,
+        AllowUserToAddRows = false,
+        AllowUserToDeleteRows = false,
+        AllowUserToResizeRows = false,
+        ReadOnly = true,
+        SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+        MultiSelect = false,
+        EnableHeadersVisualStyles = false,
+        ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
+        ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
         {
-            BackColor          = BgCard,
-            ForeColor          = TextMuted,
+            BackColor = BgCard,
+            ForeColor = TextMuted,
             SelectionBackColor = BgCard,
             SelectionForeColor = TextMuted,
-            Font               = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-            Alignment          = DataGridViewContentAlignment.MiddleLeft,
-            Padding            = new Padding(8, 4, 4, 4),
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+            Alignment = DataGridViewContentAlignment.MiddleLeft,
+            Padding = new Padding(8, 4, 4, 4),
         },
         DefaultCellStyle = new DataGridViewCellStyle
         {
-            BackColor          = BgPage,
-            ForeColor          = TextPrimary,
+            BackColor = BgPage,
+            ForeColor = TextPrimary,
             SelectionBackColor = Accent,
             SelectionForeColor = Color.White,
-            Padding            = new Padding(8, 2, 4, 2),
+            Padding = new Padding(8, 2, 4, 2),
         },
     };
 
     private sealed class ProviderRowViewModel
     {
-        public string Name         { get; set; } = string.Empty;
-        public string GuidDisplay  { get; set; } = string.Empty;
-        public int    KeywordCount { get; set; }
-        public int    LevelCount   { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string GuidDisplay { get; set; } = string.Empty;
+        public int KeywordCount { get; set; }
+        public int LevelCount { get; set; }
         public required ProviderInfo Source { get; init; }
     }
 }

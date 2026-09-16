@@ -29,7 +29,7 @@
     <!-- ETW provider enumeration + session control. Same package version as
          ETDucky.Agent so the explorer and the agent stay binary-compatible
          (avoids two TraceEvent native shims on a host that has both). -->
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.3" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.5" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- Embed app.ico as a managed resource in addition to the PE
@@ -43,8 +43,8 @@
   </ItemGroup>
 
   <!-- Note: this project does NOT reference ETDucky.Core. It is built to stand
-       alone so it can be carved out into a public MIT-licensed repo without
-       pulling in agent-internal types. The AgentConfig diff tab reads
+       alone so it can be carved out into a public Apache 2.0-licensed repo
+       without pulling in agent-internal types. The AgentConfig diff tab reads
        AgentConfig.json as raw JSON (no Core DTO dependency). -->
 
   <!-- Manually copy the x64 TraceEvent native DLLs after build. TraceEventSession
@@ -57,10 +57,8 @@
        DLLs under both build/native/amd64 and build/native/x64 across versions. -->
   <Target Name="CopyTraceEventNativeDLLs" AfterTargets="Build">
     <ItemGroup>
-      <TraceEventX64DLLs Include="$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\amd64\*.dll"
-                         Condition="Exists('$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\amd64')" />
-      <TraceEventX64DLLs Include="$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\x64\*.dll"
-                         Condition="Exists('$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\x64')" />
+      <TraceEventX64DLLs Include="$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\amd64\*.dll" Condition="Exists('$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\amd64')" />
+      <TraceEventX64DLLs Include="$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\x64\*.dll" Condition="Exists('$(PkgMicrosoft_Diagnostics_Tracing_TraceEvent)\build\native\x64')" />
     </ItemGroup>
     <Copy SourceFiles="@(TraceEventX64DLLs)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="'@(TraceEventX64DLLs)' != ''" />
   </Target>

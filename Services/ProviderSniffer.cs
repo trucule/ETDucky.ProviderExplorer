@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ETDucky.ProviderExplorer.Models;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
@@ -77,10 +72,10 @@ public static class ProviderSniffer
         TimeSpan? progressInterval = null)
     {
         var isContinuous = duration == TimeSpan.MaxValue;
-        var reportEvery  = progressInterval ?? TimeSpan.FromSeconds(1);
+        var reportEvery = progressInterval ?? TimeSpan.FromSeconds(1);
         var startedAt = DateTime.UtcNow;
-        var counts    = new ConcurrentDictionary<EventBreakdownKey, long>();
-        var samples   = new ConcurrentDictionary<EventBreakdownKey, ConcurrentQueue<EventSample>>();
+        var counts = new ConcurrentDictionary<EventBreakdownKey, long>();
+        var samples = new ConcurrentDictionary<EventBreakdownKey, ConcurrentQueue<EventSample>>();
         var sessionName = $"ETDuckyExplorer_{Guid.NewGuid():N}".Substring(0, 32);
 
         TraceEventSession? session = null;
@@ -212,7 +207,7 @@ public static class ProviderSniffer
             if (queue.Count >= MaxSamplesPerKey) return;
 
             var fields = new List<EventPayloadField>();
-            var names  = data.PayloadNames ?? Array.Empty<string>();
+            var names = data.PayloadNames ?? Array.Empty<string>();
             var fieldCount = Math.Min(names.Length, MaxPayloadFieldsPerSample);
             for (var i = 0; i < fieldCount; i++)
             {
@@ -235,11 +230,11 @@ public static class ProviderSniffer
             // to be materialised to a string before we enqueue, or the sample
             // will reflect whatever event happens to arrive next.
             var sample = new EventSample(
-                TimestampUtc:     data.TimeStamp.ToUniversalTime(),
-                ProcessId:        data.ProcessID,
-                ThreadId:         data.ThreadID,
+                TimestampUtc: data.TimeStamp.ToUniversalTime(),
+                ProcessId: data.ProcessID,
+                ThreadId: data.ThreadID,
                 FormattedMessage: formatted,
-                Payload:          fields);
+                Payload: fields);
 
             // Re-check under lock-style semantics: another thread may have
             // filled the queue between our count check and the enqueue.
@@ -275,15 +270,15 @@ public static class ProviderSniffer
     private static SniffResult ErrorResult(Guid guid, string name, DateTime startedAt, string message, Exception _)
         => new()
         {
-            ProviderGuid  = guid,
-            ProviderName  = name,
-            StartedAtUtc  = startedAt,
-            Duration      = DateTime.UtcNow - startedAt,
-            TotalEvents   = 0,
-            Breakdown     = Array.Empty<EventBreakdown>(),
-            Samples       = new Dictionary<EventBreakdownKey, IReadOnlyList<EventSample>>(),
+            ProviderGuid = guid,
+            ProviderName = name,
+            StartedAtUtc = startedAt,
+            Duration = DateTime.UtcNow - startedAt,
+            TotalEvents = 0,
+            Breakdown = Array.Empty<EventBreakdown>(),
+            Samples = new Dictionary<EventBreakdownKey, IReadOnlyList<EventSample>>(),
             WasIncomplete = true,
-            Error         = message,
+            Error = message,
         };
 
     /// <summary>
@@ -309,15 +304,15 @@ public static class ProviderSniffer
 
         return new SniffResult
         {
-            ProviderGuid   = guid,
-            ProviderName   = name,
-            StartedAtUtc   = startedAt,
-            Duration       = DateTime.UtcNow - startedAt,
-            TotalEvents    = counts.Values.Sum(),
-            Breakdown      = breakdown,
-            Samples        = sampleSnapshot,
-            WasIncomplete  = wasIncomplete,
-            IsContinuous   = isContinuous,
+            ProviderGuid = guid,
+            ProviderName = name,
+            StartedAtUtc = startedAt,
+            Duration = DateTime.UtcNow - startedAt,
+            TotalEvents = counts.Values.Sum(),
+            Breakdown = breakdown,
+            Samples = sampleSnapshot,
+            WasIncomplete = wasIncomplete,
+            IsContinuous = isContinuous,
             IsLiveSnapshot = isLiveSnapshot,
         };
     }
