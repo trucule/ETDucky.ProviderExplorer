@@ -29,7 +29,7 @@
     <!-- ETW provider enumeration + session control. Same package version as
          ETDucky.Agent so the explorer and the agent stay binary-compatible
          (avoids two TraceEvent native shims on a host that has both). -->
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.5" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.6" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- Embed app.ico as a managed resource in addition to the PE
