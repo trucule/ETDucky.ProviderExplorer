@@ -217,7 +217,7 @@ public static class ProviderSniffer
 
                 var rendered = RenderValue(value);
                 if (rendered.Length > MaxPayloadFieldValueChars)
-                    rendered = rendered.Substring(0, MaxPayloadFieldValueChars) + "… (truncated)";
+                    rendered = string.Concat(rendered.AsSpan(0, MaxPayloadFieldValueChars), "… (truncated)");
 
                 fields.Add(new EventPayloadField(names[i] ?? $"field{i}", rendered));
             }

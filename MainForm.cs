@@ -23,7 +23,6 @@ public sealed class MainForm : Form
     private static readonly Color TextMuted = Color.FromArgb(120, 120, 140);
     private static readonly Color Border = Color.FromArgb(40, 40, 55);
     private static readonly Color Success = Color.FromArgb(34, 197, 94);
-    private static readonly Color Warning = Color.FromArgb(217, 140, 0);
     private static readonly Color Danger = Color.FromArgb(239, 68, 68);
 
     // ── State ────────────────────────────────────────────────────────────────
